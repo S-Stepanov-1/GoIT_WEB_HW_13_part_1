@@ -30,3 +30,10 @@ async def update_token(user: Type[User], token: str | None, db: Session) -> None
     user.refresh_token = token
     db.commit()
     db.refresh(user)
+
+
+async def confirmed_email(email: str, db: Session) -> None:
+    user = await get_user_by_email(email, db)
+    user.confirmed = True
+    db.commit()
+    db.refresh(user)

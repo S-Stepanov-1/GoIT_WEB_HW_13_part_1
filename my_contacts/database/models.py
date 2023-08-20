@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, func, ForeignKey
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql.sqltypes import Date, DateTime
+from sqlalchemy.sql.sqltypes import Date, DateTime, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -25,6 +25,8 @@ class User(Base):
     username = Column(String(50), nullable=False, unique=True)
     user_email = Column(String(50), nullable=False, unique=True)
     password = Column(String(255), nullable=False)
-    created_at = Column(DateTime, default=func.now())
+    confirmed = Column(Boolean, default=False)
     refresh_token = Column(String(255), nullable=True)
     contacts = relationship("Contact", back_populates="user")
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())

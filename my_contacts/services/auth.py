@@ -1,6 +1,4 @@
 import os
-
-from configparser import ConfigParser
 from typing import Optional
 
 from jose import jwt, JWTError
@@ -9,28 +7,22 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
 
 from my_contacts.database.db_connect import get_db
 from my_contacts.repository import users as repository_users
 
-#  This part of the code doesn't make sense,
-#  because if you pass SECRET_KEY through config, the program interprets it somehow differently...
-# ----------------------------------------------------------------
-# current_folder = os.path.dirname(os.path.abspath(__file__))
-# parent_folder = os.path.dirname(current_folder)
-# base_folder = os.path.dirname(parent_folder)
-#
-# init_file = os.path.join(base_folder, "config.ini")
-#
-# config = ConfigParser()
-# config.read(init_file)
-# ----------------------------------------------------------------
+
+load_dotenv()
+
+secret_key = os.environ.get("SECRET_KEY")
+algorithm = os.environ.get("ALGORITHM")
 
 
 class Auth:
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    SECRET_KEY = "top_secret_in_the_world"
-    ALGORITHM = "HS256"
+    SECRET_KEY = secret_key
+    ALGORITHM = algorithm
     oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
     async def verify_password(self, plain_password, hashed_password):
@@ -38,6 +30,23 @@ class Auth:
 
     async def get_password_hash(self, password: str):
         return self.pwd_context.hash(password)
+
+    async def create_email_token(self, data: dict):
+        to_encode = data.copy()
+        expire = datetime.utcnow() + timedelta(days=5)
+        to_encode.update({"iat": datetime.utcnow(), "exp": expire})
+        token = jwt.encode(to_encode, self.SECRET_KEY, algorithm=self.ALGORITHM)
+        return token
+
+    async def get_email_from_token(self, token: str):
+        try:
+            payload = jwt.decode(token, self.SECRET_KEY, algorithms=[self.ALGORITHM])
+            email = payload["sub"]
+            return email
+        except JWTError as e:
+            print(e)
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                                detail="Invalid token for email verification")
 
     # define a function to generate a new access token
     async def create_access_token(self, data: dict, expires_delta: Optional[float] = None):

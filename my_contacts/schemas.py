@@ -33,7 +33,7 @@ class UserModel(BaseModel):
 
 class UserResponse(BaseModel):
     username: str
-    user_email: EmailStr
+    user_email: str
     detail: str = "User successfully created"
 
     class Config:
