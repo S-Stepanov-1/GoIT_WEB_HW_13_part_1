@@ -7,13 +7,14 @@ from fastapi_limiter import FastAPILimiter
 from starlette.middleware.cors import CORSMiddleware
 
 from my_contacts.database.db_connect import get_db
-from my_contacts.routes import contacts, auth
+from my_contacts.routes import contacts, auth, users
 
 app = FastAPI()
 
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(contacts.router, prefix="/api")
+app.include_router(users.router, prefix="/api")
 
 
 app.add_middleware(
