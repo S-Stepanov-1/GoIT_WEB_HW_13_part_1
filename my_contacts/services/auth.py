@@ -31,9 +31,13 @@ class Auth:
     async def get_password_hash(self, password: str):
         return self.pwd_context.hash(password)
 
-    async def create_email_token(self, data: dict):
+    async def create_email_token(self, data: dict, expires_delta: Optional[float] = None):
         to_encode = data.copy()
-        expire = datetime.utcnow() + timedelta(days=5)
+        if expires_delta:
+            expire = datetime.utcnow() + timedelta(seconds=expires_delta)
+        else:
+            expire = datetime.utcnow() + timedelta(days=5)
+
         to_encode.update({"iat": datetime.utcnow(), "exp": expire})
         token = jwt.encode(to_encode, self.SECRET_KEY, algorithm=self.ALGORITHM)
         return token
